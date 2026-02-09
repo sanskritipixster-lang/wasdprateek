@@ -10,9 +10,12 @@ import Foundation
 import Combine
 import SwiftData
 
+@MainActor
 class ViewModel: ObservableObject {
     let baseURL = "https://v6.exchangerate-api.com/v6"
     let APIKey = "8cea16c76b5c2669eae114d1"
+    
+    @Published var showError: Bool = false
     
     @AppStorage("user_balance") var balance: Double = 0.0
     
@@ -31,6 +34,15 @@ class ViewModel: ObservableObject {
                 self.balance = self.balance + amount*rate
             }
             .store(in: &cancellables)
+    }
+    
+    func withDrawAmount(amount: Double, context: ModelContext){
+        if amount > balance {
+            showError = true
+            return
+        }
+        self.saveTransaction(context: context, amount: amount, type: .withdraw, currency: "INR", inrAmount: amount)
+        self.balance = self.balance - amount
     }
     
     func getConversionRate(

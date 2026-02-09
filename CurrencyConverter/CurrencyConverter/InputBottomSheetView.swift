@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct InputBottomSheetView: View {
+    var type: TransactionType
     @Environment(\.dismiss) private var dismiss
     @StateObject var viewModel: ViewModel = ViewModel()
     @State private var amount: String = ""
@@ -34,28 +35,40 @@ struct InputBottomSheetView: View {
             // MARK: - Top Bar
             HStack(spacing: 12) {
                 // currency selector
-                Menu {
-                    ForEach(currencies, id: \.self) { currency in
-                        Button {
-                            selectedCurrency = currency
-                        } label: {
-                            HStack {
-                                Text(currency)
-                                Spacer()
-                                if selectedCurrency == currency {
-                                    Image(systemName: "checkmark")
+                if type == .deposit{
+                    Menu {
+                        ForEach(currencies, id: \.self) { currency in
+                            Button {
+                                selectedCurrency = currency
+                            } label: {
+                                HStack {
+                                    Text(currency)
+                                    Spacer()
+                                    if selectedCurrency == currency {
+                                        Image(systemName: "checkmark")
+                                    }
                                 }
                             }
                         }
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(selectedCurrency)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white)
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(selectedCurrency)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
 
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.caption)
+                                .foregroundColor(.white)
+                        }
+                        .frame(minHeight: 52)
+                        .padding(.horizontal, 14)
+                        .background(Color(red: 2/255, green: 121/255, blue: 255/255))
+                        .cornerRadius(12)
+                    }
+                } else {
+                    HStack(spacing: 6) {
+                        Text("INR")
+                            .fontWeight(.semibold)
                             .foregroundColor(.white)
                     }
                     .frame(minHeight: 52)
@@ -78,10 +91,14 @@ struct InputBottomSheetView: View {
 
             // MARK: - Keypad
             KeyPadView(
-                enteredValue: $amount,
+                type: type, enteredValue: $amount,
                 onConfirm: {
                     // For now: just close the sheet
-                    viewModel.saveDeposite(currency: selectedCurrency, amount: Double(amount) ?? 0, context: modelContext)
+                    if type == .deposit{
+                        viewModel.saveDeposite(currency: selectedCurrency, amount: Double(amount) ?? 0, context: modelContext)
+                    } else {
+                        viewModel.withDrawAmount(amount: Double(amount) ?? 0, context: modelContext)
+                    }
                     dismiss()
                 }
             )
@@ -98,6 +115,7 @@ struct InputBottomSheetView: View {
 }
 
 struct KeyPadView: View {
+    var type: TransactionType
     @Binding var enteredValue: String
     var onConfirm: () -> Void
 
@@ -194,6 +212,6 @@ struct KeyPadView: View {
 }
 
 #Preview{
-    KeyPadView(enteredValue: .constant("10.0"), onConfirm: {
+    KeyPadView(type: .deposit, enteredValue: .constant("10.0"), onConfirm: {
     })
 }

@@ -11,6 +11,7 @@ import SwiftData
 struct HomeView: View {
     @State private var isExpanded = false
     @State private var showDepositSheet = false
+    @State private var showWithdrawSheet = false
     
     @Query(sort: \Transaction.date, order: .reverse)
     var transactions: [Transaction]
@@ -82,7 +83,7 @@ struct HomeView: View {
                     // Buttons
                     HStack(spacing: 16) {
                         
-                        Button(action: {}) {
+                        Button(action: {showWithdrawSheet = true}) {
                             Text("WITHDRAW")
                                 .fontWeight(.semibold)
                                 .frame(maxWidth: .infinity)
@@ -90,6 +91,10 @@ struct HomeView: View {
                                 .background(Color.white)
                                 .foregroundColor(.black)
                                 .cornerRadius(14)
+                        }
+                        .sheet(isPresented: $showWithdrawSheet) {
+                            InputBottomSheetView(type: .withdraw)
+                                .presentationDetents([.medium])
                         }
                         
                         
@@ -103,7 +108,7 @@ struct HomeView: View {
                                 .cornerRadius(14)
                         }
                         .sheet(isPresented: $showDepositSheet) {
-                            InputBottomSheetView()
+                            InputBottomSheetView(type: .deposit)
                                 .presentationDetents([.medium])
                         }
                     }
@@ -175,6 +180,16 @@ struct HomeView: View {
             .padding(.top, isExpanded ? 0 : 300)
             .ignoresSafeArea(edges: isExpanded ? .all : .bottom)
         }
+        .confirmationDialog(
+            "Low Balance Warning",
+            isPresented: $viewModel.showError,
+            titleVisibility: .visible
+        ) {
+            Button("Okay", role: .cancel) { }
+        } message: {
+            Text("Your available balance is too low to complete this transaction. Please add funds to continue.")
+        }
+
     }
     
 }
